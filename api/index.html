@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title> Potato Leaves Disease Detector</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        margin: 0;
+        padding: 0;
+    }
+    .container {
+        max-width: 600px;
+        margin: 50px auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+        margin-bottom: 20px;
+        color: #333;
+    }
+    input[type="file"] {
+        display: none;
+    }
+    #imageInputLabel {
+        display: block;
+        margin-bottom: 20px;
+        color: #007bff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    #imageInputLabel:hover {
+        color: #0056b3;
+    }
+    #preview {
+        max-width: 100%;
+        margin-bottom: 20px;
+    }
+    #uploadBtn {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    #uploadBtn:hover {
+        background-color: #0056b3;
+    }
+    #response {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #f0f0f0;
+        border-radius: 5px;
+    }
+    #result {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #d4edda;
+        border-radius: 5px;
+    }
+    #result h3 {
+        margin: 0;
+        color: #155724;
+    }
+    #result p {
+        margin: 5px 0;
+        color: #155724;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h2>Upload Your Image Here</h2>
+    <input type="file" id="imageInput" accept="image/*">
+    <label for="imageInput" id="imageInputLabel">Select Image</label>
+    <div id="preview"></div>
+    <button id="uploadBtn">Upload Image</button>
+    <div id="response"></div>
+    <div id="result" style="display: none;">
+        <h3>Result:</h3>
+        <p id="class"></p>
+        <p id="confidence"></p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const imageInput = document.getElementById('imageInput');
+        const imageInputLabel = document.getElementById('imageInputLabel');
+        const preview = document.getElementById('preview');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const responseDiv = document.getElementById('response');
+        const resultDiv = document.getElementById('result');
+        const classParagraph = document.getElementById('class');
+        const confidenceParagraph = document.getElementById('confidence');
+
+        // Function to display the selected image
+        imageInput.addEventListener('change', function(event) {
+            displayImage(event.target.files[0]);
+        });
+
+        // Function to display the selected image
+        function displayImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.maxWidth = '100%';
+                preview.innerHTML = '';
+                preview.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Function to upload image and handle response
+        uploadBtn.addEventListener('click', function() {
+            const file = imageInput.files[0];
+            if (!file) {
+                alert('Please select an image first.');
+                return;
+            }
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('http://localhost:8000/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                classParagraph.innerText = 'Class: ' + data.class;
+                confidenceParagraph.innerText = 'Confidence: ' + (data.confidence * 100).toFixed(2) + '%';
+                resultDiv.style.display = 'block';
+                responseDiv.innerText = '';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                responseDiv.innerText = 'Error occurred while uploading the image.';
+            });
+        });
+    });
+</script>
+</body>
+</html>
